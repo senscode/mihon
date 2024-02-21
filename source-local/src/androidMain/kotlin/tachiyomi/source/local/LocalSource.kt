@@ -109,7 +109,8 @@ actual class LocalSource(
     override val supportsLatest: Boolean = true
 
     private fun loadMangaForPage(page: Int) {
-        if (page != loadedPages + 1 || page == currentlyLoadingPage) return
+        if (page != loadedPages + 1) return
+        if (page == currentlyLoadingPage) return
 
         currentlyLoadingPage = loadedPages + 1
 
