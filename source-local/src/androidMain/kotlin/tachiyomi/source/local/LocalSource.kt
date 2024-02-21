@@ -61,7 +61,6 @@ import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
-import kotlin.time.Duration.Companion.days
 import com.github.junrar.Archive as JunrarArchive
 import tachiyomi.domain.source.model.Source as DomainSource
 
