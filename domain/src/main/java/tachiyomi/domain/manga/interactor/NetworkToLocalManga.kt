@@ -1,6 +1,8 @@
 package tachiyomi.domain.manga.interactor
 
 import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.manga.model.MangaUpdate
+import tachiyomi.domain.manga.model.toMangaUpdate
 import tachiyomi.domain.manga.repository.MangaRepository
 
 class NetworkToLocalManga(
@@ -9,6 +11,11 @@ class NetworkToLocalManga(
 
     suspend fun await(manga: Manga): Manga {
         val localManga = getManga(manga.url, manga.source)
+
+        if (localManga != null && localManga.lastModifiedAtLocal != manga.lastModifiedAtLocal) {
+            updateManga(manga.copy(id = localManga.id).toMangaUpdate())
+        }
+
         return when {
             localManga == null -> {
                 val id = insertManga(manga)
@@ -31,5 +38,9 @@ class NetworkToLocalManga(
 
     private suspend fun insertManga(manga: Manga): Long? {
         return mangaRepository.insert(manga)
+    }
+
+    private suspend fun updateManga(mangaUpdate: MangaUpdate) {
+        mangaRepository.update(mangaUpdate)
     }
 }

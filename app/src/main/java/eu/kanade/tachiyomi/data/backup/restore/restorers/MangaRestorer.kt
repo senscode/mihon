@@ -125,6 +125,7 @@ class MangaRestorer(
                 coverLastModified = manga.coverLastModified,
                 dateAdded = manga.dateAdded,
                 mangaId = manga.id,
+                lastModifiedAtLocal = manga.lastModifiedAtLocal,
                 updateStrategy = manga.updateStrategy.let(UpdateStrategyColumnAdapter::encode),
             )
         }
@@ -252,6 +253,7 @@ class MangaRestorer(
                 chapterFlags = manga.chapterFlags,
                 coverLastModified = manga.coverLastModified,
                 dateAdded = manga.dateAdded,
+                lastModifiedAtLocal = manga.lastModifiedAtLocal,
                 updateStrategy = manga.updateStrategy,
             )
             mangasQueries.selectLastInsertedRowId()

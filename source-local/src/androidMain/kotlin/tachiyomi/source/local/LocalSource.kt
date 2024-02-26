@@ -117,7 +117,7 @@ actual class LocalSource(
         val mangaPage = mangaChunks[page - 1].map { mangaDir ->
             SManga.create().apply manga@{
                 url = mangaDir.name.toString()
-                lastModified = mangaDir.lastModified()
+                lastModifiedAtLocal = mangaDir.lastModified()
 
                 val localMangaList = runBlocking { getMangaList() }
                 mangaDir.name?.let { title = localMangaList[url]?.title ?: it }
@@ -138,13 +138,8 @@ actual class LocalSource(
                     if (chapters.isNotEmpty()) {
                         val chapter = chapters.last()
 
-                        // only read metadata from disk if no optional field has metadata in the database yet
-                        if (author.isNullOrBlank() &&
-                            artist.isNullOrBlank() &&
-                            description.isNullOrBlank() &&
-                            genre.isNullOrBlank() &&
-                            status == ComicInfoPublishingStatus.toSMangaValue("Unknown")
-                        ) {
+                        // only read metadata from disk if it the mangaDir has been modified
+                        if (lastModifiedAtLocal != localMangaList[url]?.lastModifiedAt) {
                             when (val format = getFormat(chapter)) {
                                 is Format.Directory -> getMangaDetails(this@manga)
                                 is Format.Zip -> getMangaDetails(this@manga)
@@ -411,7 +406,7 @@ actual class LocalSource(
         when (orderByLatest) {
             OrderByLatest.LATEST ->
                 includedManga = if (allMangaLoaded || isFilteredSearch) {
-                    includedManga.sortedBy { it.lastModified }
+                    includedManga.sortedBy { it.lastModifiedAtLocal }
                         .toMutableList()
                 } else {
                     includedManga
@@ -419,7 +414,7 @@ actual class LocalSource(
 
             OrderByLatest.OLDEST ->
                 includedManga = if (allMangaLoaded || isFilteredSearch) {
-                    includedManga.sortedByDescending { it.lastModified }
+                    includedManga.sortedByDescending { it.lastModifiedAtLocal }
                         .toMutableList()
                 } else {
                     includedManga

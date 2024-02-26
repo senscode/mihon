@@ -25,6 +25,7 @@ CREATE TABLE mangas(
     update_strategy INTEGER AS UpdateStrategy NOT NULL DEFAULT 0,
     calculate_interval INTEGER DEFAULT 0 NOT NULL,
     last_modified_at INTEGER NOT NULL DEFAULT 0,
+    last_modified_at_local INTEGER,
     favorite_modified_at INTEGER
 );
 
@@ -116,8 +117,8 @@ WHERE favorite = 0
 AND source IN :sourceIds;
 
 insert:
-INSERT INTO mangas(source, url, artist, author, description, genre, title, status, thumbnail_url, favorite, last_update, next_update, initialized, viewer, chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval, last_modified_at)
-VALUES (:source, :url, :artist, :author, :description, :genre, :title, :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags, :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval, 0);
+INSERT INTO mangas(source, url, artist, author, description, genre, title, status, thumbnail_url, favorite, last_update, next_update, initialized, viewer, chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval, last_modified_at, last_modified_at_local)
+VALUES (:source, :url, :artist, :author, :description, :genre, :title, :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags, :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval, 0, :lastModifiedAtLocal);
 
 update:
 UPDATE mangas SET
@@ -139,7 +140,8 @@ UPDATE mangas SET
     cover_last_modified = coalesce(:coverLastModified, cover_last_modified),
     date_added = coalesce(:dateAdded, date_added),
     update_strategy = coalesce(:updateStrategy, update_strategy),
-    calculate_interval = coalesce(:calculateInterval, calculate_interval)
+    calculate_interval = coalesce(:calculateInterval, calculate_interval),
+    last_modified_at_local = coalesce(:lastModifiedAtLocal, last_modified_at_local)
 WHERE _id = :mangaId;
 
 selectLastInsertedRowId:
