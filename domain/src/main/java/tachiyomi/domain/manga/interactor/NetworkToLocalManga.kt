@@ -10,24 +10,24 @@ class NetworkToLocalManga(
 ) {
 
     suspend fun await(manga: Manga): Manga {
-        val localManga = getManga(manga.url, manga.source)
+        val localDbManga = getManga(manga.url, manga.source)
 
-        if (localManga != null && localManga.dirLastModifiedAt != manga.dirLastModifiedAt) {
-            updateManga(manga.copy(id = localManga.id).toMangaUpdate())
+        if (localDbManga != null && localDbManga.dirLastModifiedAt != manga.dirLastModifiedAt) {
+            updateManga(manga.copy(id = localDbManga.id, favorite = localDbManga.favorite).toMangaUpdate())
         }
 
         return when {
-            localManga == null -> {
+            localDbManga == null -> {
                 val id = insertManga(manga)
                 manga.copy(id = id!!)
             }
-            !localManga.favorite -> {
+            !localDbManga.favorite -> {
                 // if the manga isn't a favorite, set its display title from source
                 // if it later becomes a favorite, updated title will go to db
-                localManga.copy(title = manga.title)
+                localDbManga.copy(title = manga.title)
             }
             else -> {
-                localManga
+                localDbManga
             }
         }
     }
