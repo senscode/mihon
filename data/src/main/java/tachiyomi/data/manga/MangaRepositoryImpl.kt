@@ -105,8 +105,8 @@ class MangaRepositoryImpl(
                 chapterFlags = manga.chapterFlags,
                 coverLastModified = manga.coverLastModified,
                 dateAdded = manga.dateAdded,
-                lastModifiedAtLocal = manga.lastModifiedAtLocal,
                 updateStrategy = manga.updateStrategy,
+                lastModifiedAtLocal = manga.lastModifiedAtLocal,
             )
             mangasQueries.selectLastInsertedRowId()
         }
