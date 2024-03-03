@@ -72,12 +72,10 @@ actual class LocalSource(
 
     private val json: Json by injectLazy()
     private val xml: XML by injectLazy()
-
     private val mangaRepository: MangaRepository by injectLazy()
 
-    private var localMangaChunks: MutableList<List<SManga>> = mutableListOf()
-
-    private var mangaChunks: List<List<UniFile>> =
+    private var mangaChunks: MutableList<List<SManga>> = mutableListOf()
+    private var mangaDirChunks: List<List<UniFile>> =
         fileSystem.getFilesInBaseDirectory()
             // Filter out files that are hidden and is not a folder
             .asSequence()
@@ -114,33 +112,32 @@ actual class LocalSource(
             // Filter out files that are hidden and is not a folder
             .asSequence()
             .filter { it.isDirectory && it.name?.startsWith('.') == false }
-            .filterNot { mangaDir -> mangaChunks.flatten().map { it }.contains(mangaDir) }
+            .filterNot { mangaDir -> mangaDirChunks.flatten().map { it }.contains(mangaDir) }
             .distinctBy { it.name }
             .sortedBy { it.lastModified() }
             .toList()
 
         if (newManga.isNotEmpty()) {
-            mangaChunks = mangaChunks
+            mangaDirChunks = mangaDirChunks
                 .flatten()
                 .plus(newManga)
                 .distinctBy { it.name }
                 .chunked(CHUNK_SIZE)
 
             allMangaLoaded = false
-            if (localMangaChunks.last().size % CHUNK_SIZE != 0) {
-                localMangaChunks = localMangaChunks.dropLast(1).toMutableList()
+            if (mangaChunks.last().size % CHUNK_SIZE != 0) {
+                mangaChunks = mangaChunks.dropLast(1).toMutableList()
                 loadedPages--
             }
         }
     }
 
     private fun loadMangaForPage(page: Int) {
-        if (page != loadedPages + 1) return
-        if (page == currentlyLoadingPage) return
+        if (page != loadedPages + 1 || page == currentlyLoadingPage) return
 
         currentlyLoadingPage = loadedPages + 1
 
-        val mangaPage = mangaChunks[page - 1].map { mangaDir ->
+        val mangaPage = mangaDirChunks[page - 1].map { mangaDir ->
             SManga.create().apply manga@{
                 url = mangaDir.name.toString()
                 lastModifiedAtLocal = mangaDir.lastModified()
@@ -184,7 +181,7 @@ actual class LocalSource(
             }
         }.toList()
 
-        localMangaChunks.add(mangaPage)
+        mangaChunks.add(mangaPage)
         loadedPages++
         currentlyLoadingPage = null
     }
@@ -324,7 +321,7 @@ actual class LocalSource(
             }
         }
 
-        includedManga = localMangaChunks.flatten().filter { manga ->
+        includedManga = mangaChunks.flatten().filter { manga ->
             (manga.title.contains(query, ignoreCase = true) || File(manga.url).name.contains(query, ignoreCase = true)) &&
                 areAllElementsInMangaEntry(includedGenres, manga.genre) &&
                 areAllElementsInMangaEntry(includedAuthors, manga.author) &&
@@ -338,7 +335,7 @@ actual class LocalSource(
             includedArtists.isEmpty() &&
             includedStatuses.isEmpty()
         ) {
-            includedManga = localMangaChunks.flatten().toMutableList()
+            includedManga = mangaChunks.flatten().toMutableList()
             isFilteredSearch = false
         } else {
             isFilteredSearch = true
@@ -464,7 +461,7 @@ actual class LocalSource(
             includedChunkIndex = mangaPageList.lastIndex
         }
 
-        val lastLocalMangaPageReached = (mangaChunks.lastIndex == page - 1)
+        val lastLocalMangaPageReached = (mangaDirChunks.lastIndex == page - 1)
         if (lastLocalMangaPageReached) allMangaLoaded = true
 
         val lastPage = (lastLocalMangaPageReached || (isFilteredSearch && includedChunkIndex == mangaPageList.lastIndex))
@@ -652,13 +649,13 @@ actual class LocalSource(
 
     // Filters
     override fun getFilterList(): FilterList {
-        val genres = localMangaChunks.flatten().mapNotNull { it.genre?.split(",") }
+        val genres = mangaChunks.flatten().mapNotNull { it.genre?.split(",") }
             .flatMap { it.map { genre -> genre.trim() } }.toSet()
 
-        val authors = localMangaChunks.flatten().mapNotNull { it.author?.split(",") }
+        val authors = mangaChunks.flatten().mapNotNull { it.author?.split(",") }
             .flatMap { it.map { author -> author.trim() } }.toSet()
 
-        val artists = localMangaChunks.flatten().mapNotNull { it.artist?.split(",") }
+        val artists = mangaChunks.flatten().mapNotNull { it.artist?.split(",") }
             .flatMap { it.map { artist -> artist.trim() } }.toSet()
 
         val filters = try {
