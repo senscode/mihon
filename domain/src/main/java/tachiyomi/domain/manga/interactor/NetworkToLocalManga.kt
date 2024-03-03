@@ -12,7 +12,7 @@ class NetworkToLocalManga(
     suspend fun await(manga: Manga): Manga {
         val localManga = getManga(manga.url, manga.source)
 
-        if (localManga != null && localManga.lastModifiedAtLocal != manga.lastModifiedAtLocal) {
+        if (localManga != null && localManga.dirLastModifiedAt != manga.dirLastModifiedAt) {
             updateManga(manga.copy(id = localManga.id).toMangaUpdate())
         }
 

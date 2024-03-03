@@ -106,7 +106,7 @@ class MangaRepositoryImpl(
                 coverLastModified = manga.coverLastModified,
                 dateAdded = manga.dateAdded,
                 updateStrategy = manga.updateStrategy,
-                lastModifiedAtLocal = manga.lastModifiedAtLocal,
+                dirLastModifiedAt = manga.dirLastModifiedAt,
             )
             mangasQueries.selectLastInsertedRowId()
         }
@@ -155,7 +155,7 @@ class MangaRepositoryImpl(
                     coverLastModified = value.coverLastModified,
                     dateAdded = value.dateAdded,
                     mangaId = value.id,
-                    lastModifiedAtLocal = value.lastModifiedAtLocal,
+                    dirLastModifiedAt = value.dirLastModifiedAt,
                     updateStrategy = value.updateStrategy?.let(UpdateStrategyColumnAdapter::encode),
                 )
             }

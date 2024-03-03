@@ -20,7 +20,7 @@ interface SManga : Serializable {
 
     var thumbnail_url: String?
 
-    var lastModifiedAtLocal: Long?
+    var dirLastModifiedAt: Long?
 
     var update_strategy: UpdateStrategy
 
