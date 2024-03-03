@@ -13,7 +13,19 @@ class NetworkToLocalManga(
         val localDbManga = getManga(manga.url, manga.source)
 
         if (localDbManga != null && localDbManga.dirLastModifiedAt != manga.dirLastModifiedAt) {
-            updateManga(manga.copy(id = localDbManga.id, favorite = localDbManga.favorite).toMangaUpdate())
+            updateManga(
+                localDbManga.copy(
+                    url = manga.url,
+                    title = manga.title,
+                    artist = manga.artist,
+                    author = manga.author,
+                    description = manga.description,
+                    genre = manga.genre,
+                    status = manga.status,
+                    thumbnailUrl = manga.thumbnailUrl,
+                    dirLastModifiedAt = manga.dirLastModifiedAt,
+                ).toMangaUpdate(),
+            )
         }
 
         return when {
