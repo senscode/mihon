@@ -17,9 +17,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import logcat.LogPriority
+import mihon.core.common.extensions.toZipFile
 import nl.adaptivity.xmlutil.AndroidXmlReader
 import nl.adaptivity.xmlutil.serialization.XML
-import org.apache.commons.compress.archivers.zip.ZipFile
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.extension
 import tachiyomi.core.common.storage.nameWithoutExtension
@@ -570,7 +570,7 @@ actual class LocalSource(
         for (chapter in chapterArchives) {
             when (Format.valueOf(chapter)) {
                 is Format.Zip -> {
-                    ZipFile(chapter.openReadOnlyChannel(context)).use { zip: ZipFile ->
+                    chapter.openReadOnlyChannel(context).toZipFile().use { zip ->
                         zip.getEntry(COMIC_INFO_FILE)?.let { comicInfoFile ->
                             zip.getInputStream(comicInfoFile).buffered().use { stream ->
                                 return copyComicInfoFile(stream, folder)
@@ -730,7 +730,7 @@ actual class LocalSource(
                     entry?.let { coverManager.update(manga, it.openInputStream()) }
                 }
                 is Format.Zip -> {
-                    ZipFile(format.file.openReadOnlyChannel(context)).use { zip ->
+                    format.file.openReadOnlyChannel(context).toZipFile().use { zip ->
                         val entry = zip.entries.toList()
                             .sortedWith { f1, f2 -> f1.name.compareToCaseInsensitiveNaturalOrder(f2.name) }
                             .find { !it.isDirectory && ImageUtil.isImage(it.name) { zip.getInputStream(it) } }
