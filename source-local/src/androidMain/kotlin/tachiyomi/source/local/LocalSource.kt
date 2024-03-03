@@ -134,15 +134,14 @@ actual class LocalSource(
 
     private fun loadMangaForPage(page: Int) {
         if (page != loadedPages + 1 || page == currentlyLoadingPage) return
-
         currentlyLoadingPage = loadedPages + 1
 
+        val localMangaList = runBlocking { getMangaList() }
         val mangaPage = mangaDirChunks[page - 1].map { mangaDir ->
             SManga.create().apply manga@{
                 url = mangaDir.name.toString()
                 dirLastModifiedAt = mangaDir.lastModified()
 
-                val localMangaList = runBlocking { getMangaList() }
                 mangaDir.name?.let { title = localMangaList[url]?.title ?: it }
                 author = localMangaList[url]?.author
                 artist = localMangaList[url]?.artist
@@ -162,7 +161,7 @@ actual class LocalSource(
                         val chapter = chapters.last()
 
                         // only read metadata from disk if it the mangaDir has been modified
-                        if (dirLastModifiedAt != localMangaList[url]?.lastModifiedAt) {
+                        if (dirLastModifiedAt != localMangaList[url]?.dirLastModifiedAt) {
                             when (val format = getFormat(chapter)) {
                                 is Format.Directory -> getMangaDetails(this@manga)
                                 is Format.Zip -> getMangaDetails(this@manga)
