@@ -136,18 +136,19 @@ actual class LocalSource(
         if (page != loadedPages + 1 || page == currentlyLoadingPage) return
         currentlyLoadingPage = loadedPages + 1
 
-        val localMangaList = runBlocking { getMangaList() }
-        val mangaPage = mangaDirChunks[page - 1].map { mangaDir ->
+        val mangaDirPage  = mangaDirChunks[page - 1]
+        val dbManga = runBlocking { getDbManga(mangaDirPage) }
+        val mangaPage = mangaDirPage.map { mangaDir ->
             SManga.create().apply manga@{
                 url = mangaDir.name.toString()
                 dirLastModifiedAt = mangaDir.lastModified()
 
-                mangaDir.name?.let { title = localMangaList[url]?.title ?: it }
-                author = localMangaList[url]?.author
-                artist = localMangaList[url]?.artist
-                description = localMangaList[url]?.description
-                genre = localMangaList[url]?.genre?.joinToString(", ") { it.trim() }
-                status = localMangaList[url]?.status?.toInt() ?: ComicInfoPublishingStatus.toSMangaValue("Unknown")
+                mangaDir.name?.let { title = dbManga[url]?.title ?: it }
+                author = dbManga[url]?.author
+                artist = dbManga[url]?.artist
+                description = dbManga[url]?.description
+                genre = dbManga[url]?.genre?.joinToString(", ") { it.trim() }
+                status = dbManga[url]?.status?.toInt() ?: ComicInfoPublishingStatus.toSMangaValue("Unknown")
 
                 // Try to find the cover
                 coverManager.find(mangaDir.name.orEmpty())?.let {
@@ -161,7 +162,7 @@ actual class LocalSource(
                         val chapter = chapters.last()
 
                         // only read metadata from disk if it the mangaDir has been modified
-                        if (dirLastModifiedAt != localMangaList[url]?.dirLastModifiedAt) {
+                        if (dirLastModifiedAt != dbManga[url]?.dirLastModifiedAt) {
                             when (val format = getFormat(chapter)) {
                                 is Format.Directory -> getMangaDetails(this@manga)
                                 is Format.Zip -> getMangaDetails(this@manga)
@@ -483,11 +484,9 @@ actual class LocalSource(
         }
     }
 
-    private suspend fun getMangaList(): Map<String?, Manga?> {
-        return fileSystem.getFilesInBaseDirectory().toList()
-            .filter { it.isDirectory && it.name?.startsWith('.') == false }
-            .map { file ->
-                file.name?.let { mangaRepository.getMangaByUrlAndSourceId(it, ID) }
+    private suspend fun getDbManga(mangaDirs: List<UniFile>): Map<String?, Manga?> {
+        return mangaDirs.map { mangaDir ->
+                mangaDir.name?.let { mangaRepository.getMangaByUrlAndSourceId(it, ID) }
             }
             .associateBy { it?.url }
     }
