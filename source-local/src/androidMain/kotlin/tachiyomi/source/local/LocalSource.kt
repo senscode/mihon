@@ -148,7 +148,7 @@ actual class LocalSource(
                 artist = dbManga[url]?.artist
                 description = dbManga[url]?.description
                 genre = dbManga[url]?.genre?.joinToString(", ") { it.trim() }
-                status = dbManga[url]?.status?.toInt() ?: ComicInfoPublishingStatus.toSMangaValue("Unknown")
+                status = dbManga[url]?.status?.toInt() ?: SManga.UNKNOWN
 
                 // Try to find the cover
                 coverManager.find(mangaDir.name.orEmpty())?.let {
