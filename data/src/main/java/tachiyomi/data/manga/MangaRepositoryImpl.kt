@@ -65,6 +65,12 @@ class MangaRepositoryImpl(
         }
     }
 
+    override suspend fun getUpcomingManga(statuses: Set<Long>): Flow<List<Manga>> {
+        return handler.subscribeToList {
+            mangasQueries.getUpcomingManga(statuses, MangaMapper::mapManga)
+        }
+    }
+
     override suspend fun resetViewerFlags(): Boolean {
         return try {
             handler.await { mangasQueries.resetViewerFlags() }
@@ -106,6 +112,7 @@ class MangaRepositoryImpl(
                 coverLastModified = manga.coverLastModified,
                 dateAdded = manga.dateAdded,
                 updateStrategy = manga.updateStrategy,
+                version = manga.version,
                 dirLastModifiedAt = manga.dirLastModifiedAt,
             )
             mangasQueries.selectLastInsertedRowId()
@@ -157,6 +164,8 @@ class MangaRepositoryImpl(
                     mangaId = value.id,
                     dirLastModifiedAt = value.dirLastModifiedAt,
                     updateStrategy = value.updateStrategy?.let(UpdateStrategyColumnAdapter::encode),
+                    version = value.version,
+                    isSyncing = 0,
                 )
             }
         }
