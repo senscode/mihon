@@ -134,9 +134,9 @@ actual class LocalSource(
 
     private fun loadMangaForPage(page: Int) {
         if (page != loadedPages + 1 || page == currentlyLoadingPage) return
-        currentlyLoadingPage = loadedPages + 1
+        currentlyLoadingPage = page
 
-        val mangaDirPage  = mangaDirChunks[page - 1]
+        val mangaDirPage = mangaDirChunks[page - 1]
         val dbManga = runBlocking { getDbManga(mangaDirPage) }
         val mangaPage = mangaDirPage.map { mangaDir ->
             SManga.create().apply manga@{
