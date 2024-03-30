@@ -262,7 +262,11 @@ actual class LocalSource(
                     }
                 }
                 is GenreTextSearch -> {
-                    val genreList = filter.state.takeIf { it.isNotBlank() }?.split(",")?.map { it.trim() }
+                    val genreList = filter.state
+                        .takeIf { it.isNotBlank() }
+                        ?.split(",")
+                        ?.map { it.trim() }
+
                     genreList?.forEach {
                         when (it.first()) {
                             '-' -> excludedGenres.add(it.drop(1).trim())
@@ -280,7 +284,11 @@ actual class LocalSource(
                     }
                 }
                 is AuthorTextSearch -> {
-                    val authorList = filter.state.takeIf { it.isNotBlank() }?.split(",")?.map { it.trim() }
+                    val authorList = filter.state
+                        .takeIf { it.isNotBlank() }
+                        ?.split(",")
+                        ?.map { it.trim() }
+
                     authorList?.forEach {
                         when (it.first()) {
                             '-' -> excludedAuthors.add(it.drop(1).trim())
@@ -298,7 +306,11 @@ actual class LocalSource(
                     }
                 }
                 is ArtistTextSearch -> {
-                    val artistList = filter.state.takeIf { it.isNotBlank() }?.split(",")?.map { it.trim() }
+                    val artistList = filter.state
+                        .takeIf { it.isNotBlank() }
+                        ?.split(",")
+                        ?.map { it.trim() }
+
                     artistList?.forEach {
                         when (it.first()) {
                             '-' -> excludedArtists.add(it.drop(1).trim())
@@ -321,13 +333,26 @@ actual class LocalSource(
             }
         }
 
-        includedManga = mangaChunks.flatten().filter { manga ->
-            (manga.title.contains(query, ignoreCase = true) || File(manga.url).name.contains(query, ignoreCase = true)) &&
-                areAllElementsInMangaEntry(includedGenres, manga.genre) &&
-                areAllElementsInMangaEntry(includedAuthors, manga.author) &&
-                areAllElementsInMangaEntry(includedArtists, manga.artist) &&
-                (if (includedStatuses.isNotEmpty()) includedStatuses.map { ComicInfoPublishingStatus.toSMangaValue(it) }.contains(manga.status) else true)
-        }.toMutableList()
+        includedManga = mangaChunks
+            .flatten()
+            .asSequence()
+            .filter { manga ->
+                manga.title.contains(query, true) || File(manga.url).name.contains(query, true)
+            }.filter { manga ->
+                areAllElementsInMangaEntry(includedGenres, manga.genre)
+            }.filter { manga ->
+                areAllElementsInMangaEntry(includedAuthors, manga.author)
+            }.filter { manga ->
+                areAllElementsInMangaEntry(includedArtists, manga.artist)
+            }.filter { manga ->
+                if (includedStatuses.isNotEmpty()) {
+                    includedStatuses.map { status ->
+                        ComicInfoPublishingStatus.toSMangaValue(status)
+                    }.contains(manga.status)
+                } else {
+                    true
+                }
+            }.toMutableList()
 
         if (query.isBlank() &&
             includedGenres.isEmpty() &&
@@ -392,19 +417,31 @@ actual class LocalSource(
         excludedGenres.forEach { genre ->
             isFilteredSearch = true
             includedManga.removeIf { manga ->
-                manga.genre?.split(",")?.map { it.trim() }?.any { it.equals(genre, ignoreCase = true) } ?: false
+                manga.genre
+                    ?.split(",")
+                    ?.map { it.trim() }
+                    ?.any { it.equals(genre, ignoreCase = true) }
+                    ?: false
             }
         }
         excludedAuthors.forEach { author ->
             isFilteredSearch = true
             includedManga.removeIf { manga ->
-                manga.author?.split(",")?.map { it.trim() }?.any { it.equals(author, ignoreCase = true) } ?: false
+                manga.author
+                    ?.split(",")
+                    ?.map { it.trim() }
+                    ?.any { it.equals(author, ignoreCase = true) }
+                    ?: false
             }
         }
         excludedArtists.forEach { artist ->
             isFilteredSearch = true
             includedManga.removeIf { manga ->
-                manga.artist?.split(",")?.map { it.trim() }?.any { it.equals(artist, ignoreCase = true) } ?: false
+                manga.artist
+                    ?.split(",")
+                    ?.map { it.trim() }
+                    ?.any { it.equals(artist, ignoreCase = true) }
+                    ?: false
             }
         }
 
@@ -461,27 +498,28 @@ actual class LocalSource(
             includedChunkIndex = mangaPageList.lastIndex
         }
 
-        val lastLocalMangaPageReached = (mangaDirChunks.lastIndex == page - 1)
-        if (lastLocalMangaPageReached) allMangaLoaded = true
+        val lastLocalPageReached = (mangaDirChunks.lastIndex == page - 1)
+        if (lastLocalPageReached) allMangaLoaded = true
 
-        val lastPage = (lastLocalMangaPageReached || (isFilteredSearch && includedChunkIndex == mangaPageList.lastIndex))
+        val lastPage = (lastLocalPageReached || (isFilteredSearch && includedChunkIndex == mangaPageList.lastIndex))
 
         MangasPage(mangaPageList[includedChunkIndex], !lastPage)
     }
 
     private fun areAllElementsInMangaEntry(includedList: MutableList<String>, mangaEntry: String?): Boolean {
-        return if (includedList.isNotEmpty()) {
-            mangaEntry?.split(",")?.map { it.trim() }
-                ?.let { mangaEntryList ->
-                    includedList.all { includedEntry ->
-                        mangaEntryList.any { mangaEntry ->
-                            mangaEntry.equals(includedEntry, ignoreCase = true)
-                        }
+        if (includedList.isEmpty()) return true
+        if (mangaEntry == null) return false
+
+        return mangaEntry
+            .split(",")
+            .map { it.trim() }
+            .let { mangaEntryList ->
+                includedList.all { includedEntry ->
+                    mangaEntryList.any { mangaEntry ->
+                        mangaEntry.equals(includedEntry, ignoreCase = true)
                     }
-                } ?: false
-        } else {
-            true
-        }
+                }
+            }
     }
 
     private suspend fun getDbManga(mangaDirs: List<UniFile>): Map<String?, Manga?> {
