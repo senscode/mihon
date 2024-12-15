@@ -20,10 +20,9 @@ jobs:
           java-version: '17'
           distribution: adopt
 
-      - name: Install Android SDK
+      - name: Setup Android SDK
         run: |
-          echo "Installing Android SDK..."
-          yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "build-tools;29.0.3"
+          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;29.0.3"
 
       - name: Build APK for armeabi-v7a
         run: ./gradlew assembleRelease
