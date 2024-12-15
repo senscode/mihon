@@ -1,0 +1,34 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+
+      - name: Install Android SDK
+        run: |
+          echo "Installing Android SDK..."
+          yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "build-tools;29.0.3"
+
+      - name: Build APK for armeabi-v7a
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release-armeabi-v7a-apk
+          path: app/build/outputs/apk/release/app-release.apk
